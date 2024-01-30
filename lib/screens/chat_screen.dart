@@ -1,11 +1,13 @@
 import 'package:chats/widgets/textfields.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chats/models/message_model.dart';
 
 class ChatScreen extends StatefulWidget {
   final Chat chat;
+  final User currentUser;
 
-  ChatScreen({required this.chat});
+  ChatScreen({required this.chat, required this.currentUser});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -13,6 +15,23 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+
+  void _sendMessage() {
+    String messageText = _messageController.text.trim();
+    if (messageText.isNotEmpty) {
+      Message newMessage = Message(
+        content: messageText,
+        senderName: widget.currentUser.displayName ?? "Anonymous",
+        senderId: widget.currentUser.uid,
+        timestamp: DateTime.now(),
+      );
+
+      setState(() {
+        widget.chat.messages.add(newMessage);
+        _messageController.clear();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,19 +92,27 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: widget.chat.messages.length,
               itemBuilder: (context, index) {
                 Message message = widget.chat.messages[index];
+                bool isMyMessage = message.senderId == widget.currentUser.uid;
                 return ListTile(
                   title: Container(
                     width: null,
                     decoration: BoxDecoration(
-                      color: Color.fromRGBO(237, 242, 246, 1),
-                      borderRadius: BorderRadius.circular(50),
+                      color: isMyMessage
+                          ? Colors.green
+                          : Color.fromRGBO(237, 242, 246, 1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     padding: EdgeInsets.all(8),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: isMyMessage
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
                         Text(
                           message.content,
+                          style: TextStyle(
+                            color: isMyMessage ? Colors.white : Colors.black,
+                          ),
                         ),
                       ],
                     ),
@@ -133,6 +160,21 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: IconButton(
                     icon: ImageIcon(AssetImage('assets/images/Audio.png')),
                     onPressed: () {},
+                  ),
+                ),
+                SizedBox(
+                  width: 8,
+                ),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(237, 242, 246, 1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.send),
+                    onPressed: _sendMessage,
                   ),
                 ),
               ],

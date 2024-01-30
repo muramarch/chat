@@ -64,13 +64,19 @@ class _MessageListPageState extends State<MessageListPage> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ChatScreen(chat: chats[index]),
-                            ),
-                          );
+                          FirebaseAuth auth = FirebaseAuth.instance;
+                          User? currentUser = auth.currentUser;
+                          if (currentUser != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChatScreen(
+                                  chat: chats[index],
+                                  currentUser: currentUser,
+                                ),
+                              ),
+                            );
+                          }
                         },
                         child: ListTile(
                           leading: Container(
